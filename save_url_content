@@ -1,0 +1,53 @@
+#usage: 
+require_once($_SERVER['DOCUMENT_ROOT'] . '/includes/php/mysql_connect.php'); // Connect to the db
+require_once ($_SERVER['DOCUMENT_ROOT'] . '/includes/php/ftp_connect.php'); // Connect to the FTP
+
+// urltype_id = 36 -----> Resident Advisor (Person)
+
+//$query4 = "SELECT artist_id, internal_url FROM artists ORDER BY robot_save_iterator1 ASC LIMIT 100";
+$query4 = "SELECT artist_id, internal_url FROM artists WHERE artist_id='849'";
+$result4 = mysql_query($query4) or trigger_error("Query: $query4\n<br>MySQL Error: " . mysql_error());
+
+while ($row4 = mysql_fetch_array($result4, MYSQL_ASSOC)) {
+	
+	$aid = $row4['artist_id'];
+	$inturl = $row4['internal_url'];
+	
+	$query3 = "UPDATE artists SET robot_save_iterator1=current_timestamp WHERE artist_id='$aid'";
+	$result3 = mysql_query($query3) or trigger_error("Query: $query3\n<br>MySQL Error: " . mysql_error());
+	
+	$query = "SELECT url FROM added_url WHERE urltype_id='36' AND actor_id='$aid' AND actortype_id='1'";
+	$result = mysql_query($query) or trigger_error("Query: $query\n<br>MySQL Error: " . mysql_error());
+
+	while ($row = mysql_fetch_array($result, MYSQL_ASSOC)) {
+
+		$url = $row['url'];
+
+		$filepath = "../$inturl/resident.txt";
+
+		if (file_exists($filepath)) {
+			unlink($filepath);
+		}
+
+		$contents = file_get_contents("$url"); 
+		if ($contents) {
+
+		//	echo $myspace;
+			$filepath1 = "../$inturl/resident.txt";
+	
+			$filetemp = tmpfile();
+			ftp_fput($ftpc, "/httpdocs/$inturl/resident.txt", $filetemp, FTP_ASCII);
+			ftp_chmod($ftpc, 0777, "/httpdocs/$inturl/resident.txt");
+	
+			$fp = fopen($filepath1, "w") or die ("Couldn't open $filepath1");
+			fwrite($fp, $contents);
+			fclose($fp);
+		
+		}
+
+	}
+
+}
+echo "OK" ;
+ftp_close($ftpc);
+mysql_close(); // Close the database connection.
