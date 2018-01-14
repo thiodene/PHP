@@ -1,0 +1,51 @@
+<?php 
+
+include '../common/common_include.php' ;
+//include $upload_prefix . '/' . xmlburst_folder . '/utility/record_utilities.php' ;
+
+// Change the part # of each product
+
+$sql_str = "SELECT PRODUCT_GEN.*, PRODUCT_GEN.UID AS PRODUCT_ID 
+            FROM PRODUCT_GEN " ;
+$qry = new dbQuery($sql_str,"File: " . __FILE__ . " LINE " . __LINE__) ;
+$product_recs = $qry -> getRecords() ;
+$rec_count = $qry -> getCount() ;
+unset($qry) ;
+
+foreach($product_recs as $product_rec)
+{
+  $partnum = $product_rec['SKU'] ;
+  
+  // Change each products part numbers and update
+  $oldlen = strlen ($partnum) ;
+  
+  $newpartnum = str_replace (' ', '', $partnum) ;
+  $newpartnum = str_replace (':', '', $newpartnum) ;
+  $newpartnum = str_replace ('-', '', $newpartnum) ;
+  $newpartnum = str_replace ('.', '', $newpartnum) ;
+  $newpartnum = str_replace ('/', '', $newpartnum) ;
+  $newpartnum = str_replace ('+', '', $newpartnum) ;
+  
+  // If no change remove the last 2 characters
+  if (strlen($newpartnum) == $oldlen)
+    $newpartnum = substr($newpartnum, 0, -2) ;
+  
+  
+  $suffix = strtoupper(substr(md5(uniqid(rand(), true)), 0, 2)) ;
+  
+  //echo $suffix . '_' . $newpartnum. ' ;<br />' ;
+  
+  // Change parts of the Part and update
+  
+  $do_record = new doRecord("PRODUCT_GEN") ;
+  $new_rec = array() ;
+  $new_rec['SKU'] = $suffix . '_' . $newpartnum ;
+  $do_record -> new_record = $new_rec ;
+  $do_record -> id_column_val = $product_rec['PRODUCT_ID'] ;
+  $do_record -> update() ;
+  unset($new_rec) ;
+  unset($do_record) ;
+  
+}
+
+?>
