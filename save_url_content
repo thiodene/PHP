@@ -1,3 +1,5 @@
+<?php
+
 #usage: 
 require_once($_SERVER['DOCUMENT_ROOT'] . '/includes/php/mysql_connect.php'); // Connect to the db
 require_once ($_SERVER['DOCUMENT_ROOT'] . '/includes/php/ftp_connect.php'); // Connect to the FTP
@@ -51,3 +53,5 @@ while ($row4 = mysql_fetch_array($result4, MYSQL_ASSOC)) {
 echo "OK" ;
 ftp_close($ftpc);
 mysql_close(); // Close the database connection.
+
+?>
