@@ -1,0 +1,83 @@
+<?php
+
+// Checks if a customer with this email already exists in the system or not. If yes, it will return 
+// its record otherwise returns false
+function getCustomerInfoByEmail($given_email)
+{
+  global $mysqli_conn ;
+
+  $given_email = mysqli_real_escape_string($mysqli_conn,$given_email) ;
+  
+  // First check if there is a customer with first emil match
+  $sql_str = "SELECT CUSTOMER_CONTACT.*, UID AS CONTACT_ID, LNK_CUSTOMER AS CUSTOMER_ID 
+                  FROM CUSTOMER_CONTACT 
+                WHERE MAIN_EMAIL = '" . $given_email . "'
+                   OR ALT_EMAIL = '" . $given_email . "'" ;
+  $qry = new dbQuery($sql_str,"File: " . __FILE__ . " Line: " . __LINE__) ;
+  $found_recs = $qry -> getRecordsCount() ;
+  
+  if ($found_recs != 0)
+  {
+    $cu_contact_rec = $qry -> getSingleRecord() ;
+    
+    // Build the javascript array with customer info and pass it to customerEmailCheckResult
+    // which is the javascript function
+    $result = "var customer_rec = new Array() ;" ;
+    $result .= "\n customer_rec['customer_id'] = " . $cu_contact_rec['CUSTOMER_ID'] . " ;" ;
+    $result .= "\n customer_rec['contact_id'] = " . $cu_contact_rec['CONTACT_ID'] . " ;" ;
+    $result .= "\n customer_rec['first_name'] = \"" . $cu_contact_rec['FIRST_NAME'] . "\";" ;
+    $result .= "\n customer_rec['last_name'] = \"" . $cu_contact_rec['LAST_NAME'] . "\";" ;
+    $result .= "\n customer_rec['street_addr'] = \"" . $cu_contact_rec['STREET_ADDR'] . "\";" ;
+    $result .= "\n customer_rec['city'] = \"" . $cu_contact_rec['CITY'] . "\";" ;
+    $result .= "\n customer_rec['province'] = \"" . $cu_contact_rec['PROVINCE'] . "\";" ;
+    $result .= "\n customer_rec['postal_code'] = \"" . $cu_contact_rec['POSTAL_CODE'] . "\";" ;
+    $result .= "\n customer_rec['phone'] = \"" . $cu_contact_rec['PHONE'] . "\";" ;
+    // Put main or alternate email, whichever customer has provided.
+    if ($cu_contact_rec['MAIN_EMAIL'] == $given_email)
+      $result .= "\n customer_rec['email'] = \"" . $cu_contact_rec['MAIN_EMAIL'] . "\";" ;
+    else
+      $result .= "\n customer_rec['email'] = \"" . $cu_contact_rec['ALT_EMAIL'] . "\";" ;
+    $result .= "\n customerEmailCheckResult(customer_rec);" ;
+  }   
+  unset($qry) ;
+  
+  // Finally if customer not found in the customer table, check if we can 
+  // find it in the SYS_USER table with role of customer
+  if ($found_recs == 0)
+  {
+    $sql_str = "SELECT * FROM SYS_USER WHERE EMAIL_ID = '" . $given_email . "'" 
+               . " AND USER_ROLE = " . USER_ROLE_CUSTOMER ;
+    $qry = new dbQuery($sql_str,"File: " . __FILE__ . " Line: " . __LINE__) ;
+    if ($qry -> getRecordsCount() != 0)
+    {
+      // If there is a user with this email, then find its corresponding customer record
+      
+      $user_rec = $qry -> getSingleRecord() ;
+      $cu_contact_rec = lookupRecordById("CUSTOMER_CONTACT","LNK_USER",$user_rec['UID']) ;
+      
+      // Build the javascript array with customer info and pass it to customerEmailCheckResult
+      // which is the javascript function
+      $result = "var customer_rec = new Array() ;" ;
+      $result .= "\n customer_rec['customer_id'] = " . $cu_contact_rec['LNK_CUSTOMER'] . " ;" ;
+      $result .= "\n customer_rec['contact_id'] = " . $cu_contact_rec['UID'] . " ;" ;
+      $result .= "\n customer_rec['first_name'] = \"" . $cu_contact_rec['FIRST_NAME'] . "\";" ;
+      $result .= "\n customer_rec['last_name'] = \"" . $cu_contact_rec['LAST_NAME'] . "\";" ;
+      $result .= "\n customer_rec['street_addr'] = \"" . $cu_contact_rec['STREET_ADDR'] . "\";" ;
+      $result .= "\n customer_rec['city'] = \"" . $cu_contact_rec['CITY'] . "\";" ;
+      $result .= "\n customer_rec['province'] = \"" . $cu_contact_rec['PROVINCE'] . "\";" ;
+      $result .= "\n customer_rec['postal_code'] = \"" . $cu_contact_rec['POSTAL_CODE'] . "\";" ;
+      $result .= "\n customer_rec['phone'] = \"" . $cu_contact_rec['PHONE'] . "\";" ;
+      $result .= "\n customer_rec['email'] = \"" . $user_rec['EMAIL_ID'] . "\";" ;
+      $result .= "\n customerEmailCheckResult(customer_rec);" ;
+    }   
+    unset($qry) ;
+  } // check for customer user
+  
+  // If customer not found, then result is not set
+  if (! isset($result))
+    $result = "customerEmailCheckResult() ;" ;
+    
+  return $result ;
+} // getCustomerInfoByEmail
+
+?>
