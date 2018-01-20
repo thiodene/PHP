@@ -1,0 +1,17 @@
+<?php
+
+// Create the object:
+$obj = new HelloWorld() ;
+
+// Call the sayHello() method:
+$obj->sayHello();
+
+// Say hello in different languages:
+$obj->sayHello('Italian') ;
+$obj->sayHello('French') ;
+$obj->sayHello('German') ;
+
+// Delete the object:
+unset($obj);
+
+?>
