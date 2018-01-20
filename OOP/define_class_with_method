@@ -1,0 +1,24 @@
+</php # class helloWorld example
+
+class HelloWorld {
+	function sayHello($language='English') {
+		
+		echo '<p>' ;
+		
+		switch ($language) {
+			case 'Dutch':
+				echo 'Hallo, wereld!';
+			case 'French':
+				echo 'Bonjour, monde';
+			case 'German':
+				echo 'Hallo, welt';
+			case 'Spanish';
+				echo 'Hola, mundo' ;
+		}
+		
+		echo '</p>' ;
+	} // completes sayHello
+
+} // completes HelloWorld
+
+?>
